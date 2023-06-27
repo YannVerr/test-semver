@@ -1,0 +1,33 @@
+name: Creation of Release Version
+on:
+  pull_request:
+    branches: [main]
+    types:
+      - closed
+
+jobs:
+  build:
+    name: Create Release  
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Bump version
+        uses: PaulHatch/semantic-version@v5.0.2
+        id: tag_version
+        with:
+          tag_prefix: "v"
+          major_pattern: "BREAKING CHANGE"
+          minor_pattern: "feat:"
+          format: "${major}.${minor}.${patch}"
+          namespace: develop
+          change_path: "."
+          short_tags: false
+          bump_each_commit: false
+      - name: Tag Release (vX.Y.Z)
+        run: |
+          git tag ${{ steps.tag_version.outputs.version_tag }}
+          git push origin ${{ steps.tag_version.outputs.version_tag }}
